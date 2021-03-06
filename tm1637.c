@@ -5,7 +5,7 @@
 #include "tm1637.h"
 #include "stm8s_delay.h"
 
-#define CLOCK_DELAY 1
+#define CLOCK_DELAY 10
 
 #define LOW 0
 #define HIGH 1
@@ -30,13 +30,8 @@ void usleep(int milliseconds)
 void tm1637Init(void)
 {
 
-	GPIO_DeInit(GPIOB);
-	GPIO_Init(GPIOB, GPIO_PIN_4, GPIO_MODE_OUT_PP_HIGH_FAST);
-//  GPIO_Init (GPIOC, GPIO_PIN_4, GPIO_MODE_IN_FL_IT);
-	GPIO_DeInit(GPIOB);
-	GPIO_Init(GPIOB, GPIO_PIN_5, GPIO_MODE_OUT_PP_HIGH_FAST);
-//  GPIO_Init (GPIOC, GPIO_PIN_4, GPIO_MODE_IN_FL_IT);
-
+	GPIO_WriteLow(GPIOD, GPIO_PIN_2); // clkpin
+	GPIO_WriteLow(GPIOB, GPIO_PIN_4); // datapin
 	//return 0;
 }
 
@@ -46,9 +41,9 @@ void tm1637Init(void)
 static void tm1637Start(void)
 {
 	GPIO_WriteHigh(GPIOB, GPIO_PIN_4); // datapin
-	GPIO_WriteHigh(GPIOB, GPIO_PIN_5); // clkpin
+	GPIO_WriteHigh(GPIOD, GPIO_PIN_2); // clkpin
 	usleep(CLOCK_DELAY);
-	GPIO_WriteLow(GPIOB, GPIO_PIN_5); // clkpin
+	GPIO_WriteLow(GPIOB, GPIO_PIN_4); // datapin
 }
 
 /// <summary>
@@ -57,16 +52,16 @@ static void tm1637Start(void)
 static void tm1637Stop(void)
 {
 	// clock low
-	GPIO_WriteLow(GPIOB, GPIO_PIN_5);
+	GPIO_WriteLow(GPIOD, GPIO_PIN_2);   // clkpin
 	usleep(CLOCK_DELAY);
 	// data low
-	GPIO_WriteLow(GPIOB, GPIO_PIN_4);
+	GPIO_WriteLow(GPIOB, GPIO_PIN_4);   //datapin
 	usleep(CLOCK_DELAY);
 	// clock high
-	GPIO_WriteHigh(GPIOB, GPIO_PIN_5);
+	GPIO_WriteHigh(GPIOD, GPIO_PIN_2);  // clkpin
 	usleep(CLOCK_DELAY);
 	// data high
-	GPIO_WriteHigh(GPIOB, GPIO_PIN_4);
+	GPIO_WriteHigh(GPIOB, GPIO_PIN_4);  //datapin
 } 
 
 /// <summary>
@@ -78,16 +73,16 @@ static unsigned char tm1637GetAck(void)
 
 	// read ack
 	// clock to low
-	GPIO_WriteLow(GPIOB, GPIO_PIN_5);
+	GPIO_WriteLow(GPIOD, GPIO_PIN_2);
 	// data as input
 	
 	usleep(CLOCK_DELAY);
 
 	// clock high
-	GPIO_WriteHigh(GPIOB, GPIO_PIN_5);
+	GPIO_WriteHigh(GPIOD, GPIO_PIN_2);
 	usleep(CLOCK_DELAY);
 	// clock to low
-	GPIO_WriteLow(GPIOB, GPIO_PIN_5);
+	GPIO_WriteLow(GPIOD, GPIO_PIN_2);
 	return bAck;
 }
 
@@ -102,7 +97,7 @@ static void tm1637WriteByte(unsigned char b)
 	for (i=0; i<8; i++)
 	{
 		// clock low
-		GPIO_WriteLow(GPIOB, GPIO_PIN_5);
+		GPIO_WriteLow(GPIOD, GPIO_PIN_2);
 		// LSB to MSB
 		if (b & 1) 
 			GPIO_WriteHigh(GPIOB, GPIO_PIN_4);
@@ -110,7 +105,7 @@ static void tm1637WriteByte(unsigned char b)
 			GPIO_WriteLow(GPIOB, GPIO_PIN_4);
 		usleep(CLOCK_DELAY);
 		// clock high
-		GPIO_WriteHigh(GPIOB, GPIO_PIN_5);
+		GPIO_WriteHigh(GPIOD, GPIO_PIN_2);
 		usleep(CLOCK_DELAY);
 		b >>= 1;
 	}
